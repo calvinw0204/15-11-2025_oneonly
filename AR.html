@@ -6,8 +6,10 @@
   <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.css" />
+
   <style>
     body, html { margin:0; padding:0; height:100%; overflow:hidden; font-family:sans-serif; }
+
     #home-btn {
       position: fixed; top: 15px; left: 15px;
       background: rgba(0,0,0,0.6);
@@ -15,85 +17,76 @@
       width: 50px; height: 50px; font-size: 22px; cursor: pointer;
       z-index: 9999;
     }
-    #barrage-container { position:absolute; top:0; left:0; width:100%; height:60%; pointer-events:none; z-index:15; overflow:hidden; display:none; }
-    .barrage { position:absolute; white-space:nowrap; font-size:18px; color:white; text-shadow:0 0 6px black; display:flex; align-items:center; gap:6px; animation: moveLeft 8s linear forwards; }
-    .barrage img { height:120px; width:auto; border-radius:6px; vertical-align:middle; }
+
+    #barrage-container { 
+      position:absolute; top:0; left:0; width:100%; height:60%;
+      pointer-events:none; z-index:15; overflow:hidden; display:none;
+    }
+
+    .barrage { 
+      position:absolute; white-space:nowrap; font-size:20px; color:white;
+      text-shadow:0 0 6px black; display:flex; align-items:center; gap:6px;
+      animation: moveLeft 8s linear forwards;
+      pointer-events:auto;
+      padding: 4px 10px;
+      border-radius: 8px;
+      background: rgba(0,0,0,0.35);
+    }
+
+    .barrage img { height:120px; width:auto; border-radius:6px; }
+
+    .like-count {
+      font-size:18px;
+      margin-left:8px;
+    }
+
+    .liked {
+      color: #ff4f4f;
+      text-shadow: 0 0 10px #ff4f4f;
+      transform: scale(1.1);
+    }
+
     @keyframes moveLeft { from { left:100%; } to { left:-100%; } }
+
     #messageForm {
       position:fixed; bottom:10px; left:50%; transform:translateX(-50%);
       background:rgba(255,255,255,0.95); padding:8px 12px; border-radius:12px;
-      display:flex; align-items:center; gap:8px; width:90%; max-width:900px; justify-content:space-between;
-      z-index:1000; display:none;
+      display:flex; align-items:center; gap:8px; width:90%; max-width:900px;
+      justify-content:space-between; z-index:1000; display:none;
     }
+
     #messageInput { flex:1; padding:6px 8px; border-radius:6px; border:1px solid #ccc; }
     #imageInput { display:none; }
-    #imageLabel { font-size:22px; cursor:pointer; user-select:none; }
-    #imagePreview { height:90px; width:auto; border-radius:4px; display:none; margin-left:6px; }
+    #imageLabel { font-size:22px; cursor:pointer; }
+    #imagePreview { height:90px; width:auto; border-radius:4px; display:none; }
     #sendButton { background-color:#0078ff; color:white; border:none; border-radius:6px; padding:6px 12px; cursor:pointer; }
-    #sendButton:hover { background-color:#005fcc; }
 
-    /* Tap to open 提示 */
-    #tapHint {
-      position: fixed;
-      bottom: 20%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,0.6);
-      color: white;
-      padding: 12px 20px;
-      border-radius: 12px;
-      font-size: 20px;
-      display: none;
-      cursor: pointer;
-      z-index: 10000;
-    }
   </style>
 </head>
+
 <body>
 
 <button id="home-btn" onclick="goHome()">🏠</button>
 
-<!-- Tap to open 提示 -->
-<div id="tapHint">Tap to open</div>
-
-<a-scene mindar-image="imageTargetSrc: travel-target.mind; autoStart: true;
-                       filterMinCF: 0.0001;
-                       filterBeta: 0.001;
-                       missTolerance: 5;
-                       warmupTolerance: 5"
+<a-scene mindar-image="imageTargetSrc: travel-target.mind; autoStart: true"
          vr-mode-ui="enabled: false"
          device-orientation-permission-ui="enabled: true"
          embedded>
- 
   <a-camera position="0 0 0" look-controls="enabled:false" cursor="rayOrigin: mouse"></a-camera>
 
   <a-assets>
     <a-asset-item id="checkpoint0Model" src="checkpoint0.glb"></a-asset-item>
-    <a-asset-item id="checkpoint1Model" src="checkpoint1.glb"></a-asset-item>
-    <a-asset-item id="checkpoint2Model" src="checkpoint2.glb"></a-asset-item>
-    <a-asset-item id="checkpoint5Model" src="checkpoint5.glb"></a-asset-item>
   </a-assets>
 
   <a-entity mindar-image-target="targetIndex:0" id="checkpoint-0">
     <a-gltf-model src="#checkpoint0Model" position="0 0 0.1" scale="0.75 0.75 0.75"></a-gltf-model>
   </a-entity>
-
-  <a-entity mindar-image-target="targetIndex:1" id="checkpoint-1">
-    <a-gltf-model src="#checkpoint1Model" position="0 0 0.1" scale="0.75 0.75 0.75"></a-gltf-model>
-  </a-entity>
-
-  <a-entity mindar-image-target="targetIndex:2" id="checkpoint-2">
-    <a-gltf-model src="#checkpoint2Model" position="0 0 0.1" scale="0.75 0.75 0.75"></a-gltf-model>
-  </a-entity>
-
-  <a-entity mindar-image-target="targetIndex:5" id="checkpoint-5">
-    <a-gltf-model id="model-5" src="#checkpoint5Model" position="0 0 0.1" scale="2.25 2.25 2.25"></a-gltf-model>
-  </a-entity>
-
 </a-scene>
 
+<!-- 彈幕區 -->
 <div id="barrage-container"></div>
 
+<!-- 留言表單 -->
 <div id="messageForm">
   <input type="text" id="messageInput" placeholder="輸入文字..." />
   <label for="imageInput" id="imageLabel">📷</label>
@@ -105,11 +98,12 @@
 <script>
 function goHome() { window.location.href = "https://starlightar.webflow.io/"; }
 
-const messageMarkers = [
-  { id:"checkpoint-0", messages:[], interval:null, rewardKey:"reward_checkpoint0" },
-  { id:"checkpoint-1", messages:[], interval:null, rewardKey:"reward_checkpoint1" },
-  { id:"checkpoint-2", messages:[], interval:null, rewardKey:"reward_checkpoint2" }
-];
+// ------ Data ------
+const checkpoint0 = {
+  id: "checkpoint-0",
+  messages: JSON.parse(localStorage.getItem("barrage_checkpoint-0") || "[]"),
+  interval: null
+};
 
 const input = document.getElementById("messageInput");
 const sendBtn = document.getElementById("sendButton");
@@ -117,104 +111,137 @@ const imageInput = document.getElementById("imageInput");
 const preview = document.getElementById("imagePreview");
 const container = document.getElementById("barrage-container");
 const form = document.getElementById("messageForm");
-const tapHint = document.getElementById("tapHint");
-let activeMarker = null;
 
-// 載入本地存儲
-messageMarkers.forEach(m=>{
-  m.messages = JSON.parse(localStorage.getItem("barrage_" + m.id)||'[]');
-});
+let active = null;
 
-// 顯示彈幕
-function showBarrage(msg){
-  const el=document.createElement("div");
-  el.className="barrage";
-  el.style.top=Math.random()*(container.offsetHeight-120)+"px";
+// =============== ★★★ 彈幕顯示 + Like ===============
+function showBarrage(msg, index){
+  const el = document.createElement("div");
+  el.className = "barrage";
+  el.style.top = Math.random() * (container.offsetHeight - 120) + "px";
+
+  // 圖片（可選）
   if(msg.img){
-    const img=document.createElement("img");
-    img.src=msg.img;
+    const img = document.createElement("img");
+    img.src = msg.img;
     el.appendChild(img);
-    if(msg.text) el.appendChild(document.createTextNode(" "+msg.text));
-  } else el.textContent = msg.text;
+  }
+
+  // 文字（可選）
+  if(msg.text){
+    const t = document.createElement("span");
+    t.innerText = msg.text;
+    el.appendChild(t);
+  }
+
+  // ❤️ Like 數（必定顯示）
+  const like = document.createElement("span");
+  like.className = "like-count";
+  like.innerText = `❤️ ${msg.likes || 0}`;
+  el.appendChild(like);
+
+  // ★★★ Double Click Like
+  el.addEventListener("dblclick", ()=>{
+    msg.likes = (msg.likes || 0) + 1;
+    like.innerText = `❤️ ${msg.likes}`;
+
+    // UI 動畫
+    like.classList.add("liked");
+    setTimeout(()=>like.classList.remove("liked"), 300);
+
+    // 儲存
+    localStorage.setItem("barrage_checkpoint-0", JSON.stringify(checkpoint0.messages));
+  });
+
   container.appendChild(el);
-  setTimeout(()=>el.remove(),9000);
+
+  setTimeout(()=>el.remove(), 9000);
 }
 
-function startBarrage(m){
-  if(m.interval) return;
-  container.style.display="block";
-  let idx=0;
-  m.interval=setInterval(()=>{
-    if(m.messages.length>0) showBarrage(m.messages[idx]), idx=(idx+1)%m.messages.length;
-  },3000);
+// =============== Start/Stop Barrage ===============
+function startBarrage(){
+  if(checkpoint0.interval) return;
+  container.style.display = "block";
+
+  let i = 0;
+  checkpoint0.interval = setInterval(()=>{
+    if(checkpoint0.messages.length > 0){
+      showBarrage(checkpoint0.messages[i], i);
+      i = (i + 1) % checkpoint0.messages.length;
+    }
+  }, 3000);
 }
 
-function stopBarrage(m){
-  if(m.interval){ clearInterval(m.interval); m.interval=null; }
-  if(!messageMarkers.some(marker=>marker.interval)) container.style.display="none";
+function stopBarrage(){
+  clearInterval(checkpoint0.interval);
+  checkpoint0.interval = null;
+  container.style.display = "none";
+  container.innerHTML = "";
 }
 
-// Marker 0-2
-messageMarkers.forEach(m=>{
-  const el=document.getElementById(m.id);
-  el.addEventListener("targetFound", ()=>{
-    activeMarker = m;
-    form.style.display = "flex";
-    startBarrage(m);
-    localStorage.setItem(m.rewardKey,"true");
-  });
-  el.addEventListener("targetLost", ()=>{
-    if(activeMarker===m) activeMarker=null;
-    form.style.display = "none";
-    stopBarrage(m);
-    container.innerHTML = "";
-  });
+// Marker event
+const marker0 = document.getElementById("checkpoint-0");
+
+marker0.addEventListener("targetFound", ()=>{
+  active = checkpoint0;
+  form.style.display = "flex";
+  startBarrage();
 });
 
-// checkpoint-5: 顯示 Tap 提示，用戶自己點擊
-const checkpoint5Entity = document.querySelector("#checkpoint-5");
-checkpoint5Entity.addEventListener("targetFound", ()=>{
-  tapHint.style.display = "block";
-});
-checkpoint5Entity.addEventListener("targetLost", ()=>{
-  tapHint.style.display = "none";
-});
-tapHint.addEventListener("click", ()=>{
-  console.log("✅ Tap hint clicked");
-  history.back(); // 或者 window.open("URL", "_blank");
+marker0.addEventListener("targetLost", ()=>{
+  active = null;
+  form.style.display = "none";
+  stopBarrage();
 });
 
-// 圖片預覽
-imageInput.addEventListener("change",()=>{
-  const file=imageInput.files[0];
+// =============== 發送留言 ===============
+sendBtn.addEventListener("click", ()=>{
+  if(!active) return;
+
+  const text = input.value.trim();
+  const file = imageInput.files[0];
+  if(!text && !file) return;
+
+  const saveMsg = (imgData=null)=>{
+    const msg = { text, img: imgData, likes: 0 };   // ★★★ 新增 likes
+    checkpoint0.messages.push(msg);
+
+    if(checkpoint0.messages.length > 50)
+      checkpoint0.messages.shift();
+
+    localStorage.setItem("barrage_checkpoint-0", JSON.stringify(checkpoint0.messages));
+
+    showBarrage(msg, checkpoint0.messages.length -1);
+
+    input.value = "";
+    imageInput.value = "";
+    preview.style.display = "none";
+  };
+
+  if(file){
+    const reader = new FileReader();
+    reader.onload = e => saveMsg(e.target.result);
+    reader.readAsDataURL(file);
+  } else {
+    saveMsg();
+  }
+});
+
+imageInput.addEventListener("change", ()=>{
+  const file = imageInput.files[0];
   if(!file){ preview.style.display="none"; return; }
-  const reader=new FileReader();
-  reader.onload=e=>{ preview.src=e.target.result; preview.style.display="inline"; };
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    preview.src = e.target.result;
+    preview.style.display = "inline";
+  };
   reader.readAsDataURL(file);
 });
 
-// 發送留言
-sendBtn.addEventListener("click",()=>{
-  if(!activeMarker) return;
-  const text=input.value.trim();
-  const file=imageInput.files[0];
-  if(!text && !file) return;
-  const saveMsg=(imgData=null)=>{
-    const msg={text,img:imgData};
-    activeMarker.messages.push(msg);
-    if(activeMarker.messages.length>50) activeMarker.messages.shift();
-    localStorage.setItem("barrage_" + activeMarker.id,JSON.stringify(activeMarker.messages));
-    showBarrage(msg);
-    input.value=""; imageInput.value=""; preview.style.display="none";
-  };
-  if(file){
-    const reader=new FileReader();
-    reader.onload=e=>saveMsg(e.target.result);
-    reader.readAsDataURL(file);
-  } else saveMsg();
+input.addEventListener("keydown", e=>{
+  if(e.key === "Enter") sendBtn.click();
 });
-
-input.addEventListener("keydown", e=>{ if(e.key==="Enter") sendBtn.click(); });
 </script>
 
 </body>
