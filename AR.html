@@ -18,49 +18,40 @@
       z-index: 9999;
     }
 
+    /* 彈幕 */
     #barrage-container { 
-      position:absolute; top:0; left:0; width:100%; height:60%;
-      pointer-events:none; z-index:15; overflow:hidden; display:none;
+      position:absolute; top:0; left:0; width:100%; height:60%; 
+      pointer-events:none; z-index:15; overflow:hidden; display:none; 
     }
-
     .barrage { 
-      position:absolute; white-space:nowrap; font-size:20px; color:white;
-      text-shadow:0 0 6px black; display:flex; align-items:center; gap:6px;
-      animation: moveLeft 8s linear forwards;
+      position:absolute; white-space:nowrap; 
+      font-size:20px; color:white; 
+      text-shadow:0 0 6px black; 
+      display:flex; align-items:center; gap:8px;
+      animation: moveLeft 8s linear forwards; 
+      cursor:pointer; 
       pointer-events:auto;
-      padding: 4px 10px;
-      border-radius: 8px;
-      background: rgba(0,0,0,0.35);
+      padding:4px 6px;
     }
-
     .barrage img { height:120px; width:auto; border-radius:6px; }
-
-    .like-count {
-      font-size:18px;
-      margin-left:8px;
-    }
-
-    .liked {
-      color: #ff4f4f;
-      text-shadow: 0 0 10px #ff4f4f;
-      transform: scale(1.1);
-    }
+    .like-count { color: pink; font-size:20px; margin-left:6px; }
 
     @keyframes moveLeft { from { left:100%; } to { left:-100%; } }
 
+    /* 留言 UI */
     #messageForm {
       position:fixed; bottom:10px; left:50%; transform:translateX(-50%);
-      background:rgba(255,255,255,0.95); padding:8px 12px; border-radius:12px;
-      display:flex; align-items:center; gap:8px; width:90%; max-width:900px;
-      justify-content:space-between; z-index:1000; display:none;
+      background:rgba(255,255,255,0.95);
+      padding:8px 12px; border-radius:12px;
+      display:flex; align-items:center; gap:8px; width:90%;
+      max-width:900px; justify-content:space-between;
+      z-index:1000; display:none;
     }
-
     #messageInput { flex:1; padding:6px 8px; border-radius:6px; border:1px solid #ccc; }
     #imageInput { display:none; }
     #imageLabel { font-size:22px; cursor:pointer; }
     #imagePreview { height:90px; width:auto; border-radius:4px; display:none; }
     #sendButton { background-color:#0078ff; color:white; border:none; border-radius:6px; padding:6px 12px; cursor:pointer; }
-
   </style>
 </head>
 
@@ -73,20 +64,20 @@
          device-orientation-permission-ui="enabled: true"
          embedded>
   <a-camera position="0 0 0" look-controls="enabled:false" cursor="rayOrigin: mouse"></a-camera>
-
   <a-assets>
     <a-asset-item id="checkpoint0Model" src="checkpoint0.glb"></a-asset-item>
   </a-assets>
 
+  <!-- Marker -->
   <a-entity mindar-image-target="targetIndex:0" id="checkpoint-0">
     <a-gltf-model src="#checkpoint0Model" position="0 0 0.1" scale="0.75 0.75 0.75"></a-gltf-model>
   </a-entity>
 </a-scene>
 
-<!-- 彈幕區 -->
+<!-- 彈幕 -->
 <div id="barrage-container"></div>
 
-<!-- 留言表單 -->
+<!-- 留言 -->
 <div id="messageForm">
   <input type="text" id="messageInput" placeholder="輸入文字..." />
   <label for="imageInput" id="imageLabel">📷</label>
@@ -96,9 +87,8 @@
 </div>
 
 <script>
-function goHome() { window.location.href = "https://starlightar.webflow.io/"; }
+function goHome(){ window.location.href = "https://starlightar.webflow.io/"; }
 
-// ------ Data ------
 const checkpoint0 = {
   id: "checkpoint-0",
   messages: JSON.parse(localStorage.getItem("barrage_checkpoint-0") || "[]"),
@@ -114,72 +104,64 @@ const form = document.getElementById("messageForm");
 
 let active = null;
 
-// =============== ★★★ 彈幕顯示 + Like ===============
+/* ---------------- 彈幕顯示 ---------------- */
 function showBarrage(msg, index){
   const el = document.createElement("div");
   el.className = "barrage";
   el.style.top = Math.random() * (container.offsetHeight - 120) + "px";
 
-  // 圖片（可選）
   if(msg.img){
     const img = document.createElement("img");
     img.src = msg.img;
     el.appendChild(img);
   }
 
-  // 文字（可選）
   if(msg.text){
-    const t = document.createElement("span");
-    t.innerText = msg.text;
-    el.appendChild(t);
+    const textNode = document.createTextNode(msg.text);
+    el.appendChild(textNode);
   }
 
-  // ❤️ Like 數（必定顯示）
-  const like = document.createElement("span");
-  like.className = "like-count";
-  like.innerText = `❤️ ${msg.likes || 0}`;
-  el.appendChild(like);
+  // ❤️ Like Counter
+  const likeSpan = document.createElement("span");
+  likeSpan.className = "like-count";
+  likeSpan.textContent = `❤️ ${msg.likes || 0}`;
+  el.appendChild(likeSpan);
 
-  // ★★★ Double Click Like
+  // Double Click = +1 like
   el.addEventListener("dblclick", ()=>{
-    msg.likes = (msg.likes || 0) + 1;
-    like.innerText = `❤️ ${msg.likes}`;
-
-    // UI 動畫
-    like.classList.add("liked");
-    setTimeout(()=>like.classList.remove("liked"), 300);
-
-    // 儲存
+    checkpoint0.messages[index].likes = (checkpoint0.messages[index].likes || 0) + 1;
+    likeSpan.textContent = `❤️ ${checkpoint0.messages[index].likes}`;
     localStorage.setItem("barrage_checkpoint-0", JSON.stringify(checkpoint0.messages));
   });
 
   container.appendChild(el);
-
   setTimeout(()=>el.remove(), 9000);
 }
 
-// =============== Start/Stop Barrage ===============
+/* ---------------- Start Barrage ---------------- */
 function startBarrage(){
   if(checkpoint0.interval) return;
-  container.style.display = "block";
 
+  container.style.display = "block";
   let i = 0;
   checkpoint0.interval = setInterval(()=>{
     if(checkpoint0.messages.length > 0){
       showBarrage(checkpoint0.messages[i], i);
       i = (i + 1) % checkpoint0.messages.length;
     }
-  }, 3000);
+  }, 2500);
 }
 
 function stopBarrage(){
-  clearInterval(checkpoint0.interval);
-  checkpoint0.interval = null;
+  if(checkpoint0.interval){
+    clearInterval(checkpoint0.interval);
+    checkpoint0.interval = null;
+  }
   container.style.display = "none";
   container.innerHTML = "";
 }
 
-// Marker event
+/* ---------------- Marker Event ---------------- */
 const marker0 = document.getElementById("checkpoint-0");
 
 marker0.addEventListener("targetFound", ()=>{
@@ -194,7 +176,19 @@ marker0.addEventListener("targetLost", ()=>{
   stopBarrage();
 });
 
-// =============== 發送留言 ===============
+/* ---------------- Image Preview ---------------- */
+imageInput.addEventListener("change", ()=>{
+  const file = imageInput.files[0];
+  if(!file){ preview.style.display="none"; preview.src=""; return; }
+  const reader = new FileReader();
+  reader.onload = e=>{
+    preview.src = e.target.result;
+    preview.style.display = "inline";
+  };
+  reader.readAsDataURL(file);
+});
+
+/* ---------------- Send Message ---------------- */
 sendBtn.addEventListener("click", ()=>{
   if(!active) return;
 
@@ -202,46 +196,30 @@ sendBtn.addEventListener("click", ()=>{
   const file = imageInput.files[0];
   if(!text && !file) return;
 
-  const saveMsg = (imgData=null)=>{
-    const msg = { text, img: imgData, likes: 0 };   // ★★★ 新增 likes
+  const saveMsg = (imgData = null)=>{
+    const msg = { text, img: imgData, likes: 0 };
     checkpoint0.messages.push(msg);
 
-    if(checkpoint0.messages.length > 50)
-      checkpoint0.messages.shift();
-
+    if(checkpoint0.messages.length > 80) checkpoint0.messages.shift();
     localStorage.setItem("barrage_checkpoint-0", JSON.stringify(checkpoint0.messages));
 
-    showBarrage(msg, checkpoint0.messages.length -1);
+    showBarrage(msg, checkpoint0.messages.length - 1);
 
+    // ✅ 完全清除圖片預覽
     input.value = "";
     imageInput.value = "";
+    preview.src = "";
     preview.style.display = "none";
   };
 
   if(file){
     const reader = new FileReader();
-    reader.onload = e => saveMsg(e.target.result);
+    reader.onload = e=> saveMsg(e.target.result);
     reader.readAsDataURL(file);
-  } else {
-    saveMsg();
-  }
+  } else saveMsg();
 });
 
-imageInput.addEventListener("change", ()=>{
-  const file = imageInput.files[0];
-  if(!file){ preview.style.display="none"; return; }
-
-  const reader = new FileReader();
-  reader.onload = e => {
-    preview.src = e.target.result;
-    preview.style.display = "inline";
-  };
-  reader.readAsDataURL(file);
-});
-
-input.addEventListener("keydown", e=>{
-  if(e.key === "Enter") sendBtn.click();
-});
+input.addEventListener("keydown", e=>{ if(e.key==="Enter") sendBtn.click(); });
 </script>
 
 </body>
