@@ -141,7 +141,6 @@ function showBarrage(msg, index){
 /* ---------------- Start Barrage ---------------- */
 function startBarrage(){
   if(checkpoint0.interval) return;
-
   container.style.display = "block";
   let i = 0;
   checkpoint0.interval = setInterval(()=>{
@@ -163,13 +162,11 @@ function stopBarrage(){
 
 /* ---------------- Marker Event ---------------- */
 const marker0 = document.getElementById("checkpoint-0");
-
 marker0.addEventListener("targetFound", ()=>{
   active = checkpoint0;
   form.style.display = "flex";
   startBarrage();
 });
-
 marker0.addEventListener("targetLost", ()=>{
   active = null;
   form.style.display = "none";
@@ -179,7 +176,12 @@ marker0.addEventListener("targetLost", ()=>{
 /* ---------------- Image Preview ---------------- */
 imageInput.addEventListener("change", ()=>{
   const file = imageInput.files[0];
-  if(!file){ preview.style.display="none"; preview.src=""; return; }
+  if(!file){ 
+    preview.style.display="none"; 
+    preview.src=""; 
+    preview.removeAttribute("src");
+    return; 
+  }
   const reader = new FileReader();
   reader.onload = e=>{
     preview.src = e.target.result;
@@ -191,7 +193,6 @@ imageInput.addEventListener("change", ()=>{
 /* ---------------- Send Message ---------------- */
 sendBtn.addEventListener("click", ()=>{
   if(!active) return;
-
   const text = input.value.trim();
   const file = imageInput.files[0];
   if(!text && !file) return;
@@ -199,16 +200,15 @@ sendBtn.addEventListener("click", ()=>{
   const saveMsg = (imgData = null)=>{
     const msg = { text, img: imgData, likes: 0 };
     checkpoint0.messages.push(msg);
-
     if(checkpoint0.messages.length > 80) checkpoint0.messages.shift();
     localStorage.setItem("barrage_checkpoint-0", JSON.stringify(checkpoint0.messages));
-
     showBarrage(msg, checkpoint0.messages.length - 1);
 
     // ✅ 完全清除圖片預覽
     input.value = "";
     imageInput.value = "";
     preview.src = "";
+    preview.removeAttribute("src");
     preview.style.display = "none";
   };
 
