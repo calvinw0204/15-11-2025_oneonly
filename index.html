@@ -1,118 +1,144 @@
 <!DOCTYPE html>
-<html lang="zh-HK">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Goddess Intro</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkpoint-0 彈幕 + Like</title>
+
+  <!-- MindAR + THREE -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-three.prod.js"></script>
+
   <style>
     body {
       margin: 0;
-      background-color: black;
       overflow: hidden;
-      height: 100vh;
-      width: 100vw;
+      font-family: sans-serif;
     }
 
-    /* 彈幕放後面 */
-    #danmuContainer {
+    /* 彈幕區 */
+    #comments {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      pointer-events: none;
-      z-index: 5; /* 彈幕在 Lottie 後面 */
+      top: 20px;
+      left: 20px;
+      width: calc(100% - 40px);
+      pointer-events: auto;
     }
 
-    .danmu {
-      position: absolute;
-      white-space: nowrap;
-      color: rgba(255,255,255,0.8);
-      font-size: 18px;
-      text-shadow: 0 0 8px rgba(255,255,255,0.6);
-      animation: fly linear forwards;
+    /* 一條留言 */
+    .comment {
+      padding: 10px 14px;
+      margin: 6px 0;
+      background: rgba(0, 0, 0, 0.55);
+      color: white;
+      border-radius: 8px;
+      font-size: 17px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: 0.2s;
     }
 
-    @keyframes fly {
-      from { transform: translateX(100vw); }
-      to { transform: translateX(-100vw); }
+    /* Like 之後變色 */
+    .comment.liked {
+      background: rgba(255, 90, 90, 0.75);
+      transform: scale(1.05);
     }
 
-    /* Lottie 動畫填滿畫面 */
-    #lottieContainer {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 10; /* Lottie 在最前 */
-      cursor: pointer;
-      overflow: hidden;
+    /* 文字 */
+    .c-text {
+      flex: 1;
+    }
+
+    /* Like 數 */
+    .c-like {
+      margin-left: 10px;
+      font-size: 16px;
     }
   </style>
 </head>
+
 <body>
-  <!-- 彈幕容器（後面） -->
-  <div id="danmuContainer"></div>
-
-  <!-- Lottie 動畫容器（最前） -->
-  <div id="lottieContainer"></div>
-
-  <!-- Lottie.js CDN -->
-  <script src="https://unpkg.com/lottie-web@5.12.0/build/player/lottie.min.js"></script>
+  <!-- 彈幕顯示區 -->
+  <div id="comments"></div>
 
   <script>
-    // ===== 彈幕產生 =====
-    const container = document.getElementById("danmuContainer");
-    const words = [
-      "星光閃耀✨",
-      "Welcome to StarLightAR",
-      "香港電影之光🎬",
-      "Collect your rewards!",
-      "Enjoy the night🌙"
-    ];
+    document.addEventListener("DOMContentLoaded", async () => {
+      const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+        container: document.body,
+        imageTargetSrc: "./targets.mind",  // 你嘅 checkpoint-0
+      });
 
-    setInterval(() => {
-      const d = document.createElement("div");
-      d.className = "danmu";
-      d.innerText = words[Math.floor(Math.random() * words.length)];
-      d.style.top = Math.random() * (window.innerHeight - 30) + "px";
-      d.style.animationDuration = (6 + Math.random() * 5) + "s";
-      container.appendChild(d);
+      const { renderer, scene, camera } = mindarThree;
 
-      // 彈幕淡出後移除
-      setTimeout(() => {
-        d.style.opacity = "0";
-        setTimeout(() => d.remove(), 1000);
-      }, 9000);
-    }, 1000);
+      // checkpoint-0 anchor
+      const anchor = mindarThree.addAnchor(0);
 
-    // ===== Lottie 初始化 =====
-    const anim = lottie.loadAnimation({
-      container: document.getElementById('lottieContainer'),
-      renderer: 'svg',
-      loop: false,
-      autoplay: false,
-      path: 'CompJson.json', // Lottie JSON 檔
-      rendererSettings: {
-        preserveAspectRatio: 'xMidYMid slice' // 填滿整個畫面
+      // -----------------------
+      // 建立一條留言
+      // -----------------------
+      function createComment(msg) {
+        const wrap = document.createElement("div");
+        wrap.className = "comment";
+
+        const textEl = document.createElement("div");
+        textEl.className = "c-text";
+        textEl.innerText = msg;
+
+        const likeEl = document.createElement("div");
+        likeEl.className = "c-like";
+        likeEl.innerText = "0 ❤️";
+
+        wrap.appendChild(textEl);
+        wrap.appendChild(likeEl);
+
+        // Like 狀態
+        let liked = false;
+        let likeCount = 0;
+
+        wrap.addEventListener("dblclick", () => {
+          liked = !liked;
+
+          if (liked) {
+            likeCount++;
+            wrap.classList.add("liked");
+          } else {
+            likeCount--;
+            wrap.classList.remove("liked");
+          }
+          likeEl.innerText = `${likeCount} ❤️`;
+        });
+
+        return wrap;
       }
+
+      // 加入留言
+      function spawnComment(message) {
+        const c = createComment(message);
+        document.querySelector("#comments").appendChild(c);
+      }
+
+      // -----------------------
+      // checkpoint-0 掃描成功
+      // -----------------------
+      anchor.onTargetFound = () => {
+        console.log("checkpoint-0 found");
+        spawnComment("歡迎來到星光大道！");
+      };
+
+      anchor.onTargetLost = () => {
+        console.log("checkpoint-0 lost");
+      };
+
+      // -----------------------
+      // 沒有 3D Model
+      // -----------------------
+
+      await mindarThree.start();
+      renderer.setAnimationLoop(() => {
+        renderer.render(scene, camera);
+      });
     });
-
-    const lottieContainer = document.getElementById('lottieContainer');
-
-    // 點擊播放動畫
-    lottieContainer.addEventListener('click', () => {
-      lottieContainer.style.cursor = 'default';
-      anim.play();
-    }, { once: true });
-
-    // 播放完自動跳頁
-    anim.addEventListener('complete', () => {
-  window.location.href = "https://calvinw0204.github.io/15-11-2025_oneonly/AR.html";
-});
   </script>
 </body>
 </html>
-
-
