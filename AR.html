@@ -2,7 +2,7 @@
 <html lang="zh-HK">
 <head>
   <meta charset="UTF-8">
-  <title>Starlight AR</title> 
+  <title></title> 
   <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.css" />
@@ -10,33 +10,45 @@
   <style>
     body, html { margin:0; padding:0; height:100%; overflow:hidden; font-family:sans-serif; }
 
-    #home-btn {
-      position: fixed; top: 15px; left: 15px;
-      background: rgba(0,0,0,0.6);
-      color: white; border: none; border-radius: 50%;
-      width: 50px; height: 50px; font-size: 22px; cursor: pointer;
-      z-index: 9999;
-    }
-
-    /* 彈幕 */
+    /* 彈幕容器 */
     #barrage-container { 
       position:absolute; top:0; left:0; width:100%; height:60%; 
       pointer-events:none; z-index:15; overflow:hidden; display:none; 
     }
+
+    /* 彈幕：灰色橢圓背景＋白字 */
     .barrage { 
       position:absolute; white-space:nowrap; 
-      font-size:20px; color:white; 
-      text-shadow:0 0 6px black; 
-      display:flex; align-items:center; gap:8px;
-      animation: moveLeft 8s linear forwards; 
+      font-size:20px; 
+      color:white;
+      background: rgba(0, 0, 0, 0.55);
+      border-radius:999px;
+      padding:8px 14px;
+
+      display:flex; align-items:center; gap:12px;
+      animation: moveLeft 8s linear forwards;
+
       cursor:pointer; 
       pointer-events:auto;
-      padding:4px 6px;
     }
-    .barrage img { height:120px; width:auto; border-radius:6px; }
-    .like-count { color: pink; font-size:20px; margin-left:6px; }
 
-    @keyframes moveLeft { from { left:100%; } to { left:-100%; } }
+    .barrage img { 
+      height:80px; 
+      width:auto; 
+      border-radius:6px; 
+    }
+
+    /* Like 數（白色） */
+    .like-count { 
+      color:white; 
+      font-size:20px; 
+      margin-left:4px; 
+    }
+
+    @keyframes moveLeft { 
+      from { left:100%; } 
+      to { left:-100%; } 
+    }
 
     /* 留言 UI */
     #messageForm {
@@ -57,21 +69,15 @@
 
 <body>
 
-<button id="home-btn" onclick="goHome()">🏠</button>
-
 <a-scene mindar-image="imageTargetSrc: travel-target.mind; autoStart: true"
          vr-mode-ui="enabled: false"
          device-orientation-permission-ui="enabled: true"
          embedded>
   <a-camera position="0 0 0" look-controls="enabled:false" cursor="rayOrigin: mouse"></a-camera>
-  <a-assets>
-    <a-asset-item id="checkpoint0Model" src="checkpoint0.glb"></a-asset-item>
-  </a-assets>
+  <a-assets></a-assets>
 
   <!-- Marker -->
-  <a-entity mindar-image-target="targetIndex:0" id="checkpoint-0">
-    <a-gltf-model src="#checkpoint0Model" position="0 0 0.1" scale="0.75 0.75 0.75"></a-gltf-model>
-  </a-entity>
+  <a-entity mindar-image-target="targetIndex:0" id="checkpoint-0"></a-entity>
 </a-scene>
 
 <!-- 彈幕 -->
@@ -87,8 +93,6 @@
 </div>
 
 <script>
-function goHome(){ window.location.href = "https://starlightar.webflow.io/"; }
-
 const checkpoint0 = {
   id: "checkpoint-0",
   messages: JSON.parse(localStorage.getItem("barrage_checkpoint-0") || "[]"),
@@ -121,16 +125,16 @@ function showBarrage(msg, index){
     el.appendChild(textNode);
   }
 
-  // ❤️ Like Counter
+  // ❤ Like Counter（實心）
   const likeSpan = document.createElement("span");
   likeSpan.className = "like-count";
-  likeSpan.textContent = `❤️ ${msg.likes || 0}`;
+  likeSpan.textContent = `❤ ${msg.likes || 0}`;
   el.appendChild(likeSpan);
 
   // Double Click = +1 like
   el.addEventListener("dblclick", ()=>{
     checkpoint0.messages[index].likes = (checkpoint0.messages[index].likes || 0) + 1;
-    likeSpan.textContent = `❤️ ${checkpoint0.messages[index].likes}`;
+    likeSpan.textContent = `❤ ${checkpoint0.messages[index].likes}`;
     localStorage.setItem("barrage_checkpoint-0", JSON.stringify(checkpoint0.messages));
   });
 
@@ -204,7 +208,7 @@ sendBtn.addEventListener("click", ()=>{
     localStorage.setItem("barrage_checkpoint-0", JSON.stringify(checkpoint0.messages));
     showBarrage(msg, checkpoint0.messages.length - 1);
 
-    // ✅ 完全清除圖片預覽
+    // 清除圖片預覽
     input.value = "";
     imageInput.value = "";
     preview.src = "";
