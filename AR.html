@@ -2,7 +2,7 @@
 <html lang="zh-HK">
 <head>
   <meta charset="UTF-8">
-  <title></title> 
+  <title>Starlight AR</title> 
   <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.css" />
@@ -24,10 +24,8 @@
       background: rgba(0, 0, 0, 0.55);
       border-radius:999px;
       padding:8px 14px;
-
       display:flex; align-items:center; gap:12px;
       animation: moveLeft 8s linear forwards;
-
       cursor:pointer; 
       pointer-events:auto;
     }
@@ -38,17 +36,15 @@
       border-radius:6px; 
     }
 
-    /* Like 心心 SVG */
-    .like-count {
-      display:flex; align-items:center; gap:4px;
-      font-size:20px; /* 與文字同高度 */
-      color:white;
+    /* Like 數（粉紅心心） */
+    .like-count { 
+      font-size:20px; 
+      margin-left:4px; 
+      display:flex; 
+      align-items:center; 
+      color:#ff69b4;
     }
-    .like-count img {
-      height:1em; /* 與文字同高 */
-      width:auto;
-      filter: invert(53%) sepia(80%) saturate(5360%) hue-rotate(320deg) brightness(96%) contrast(93%); /* 粉紅色 */
-    }
+    .like-count img { height:1em; width:auto; margin-right:4px; }
 
     @keyframes moveLeft { 
       from { left:100%; } 
@@ -57,16 +53,33 @@
 
     /* 留言 UI */
     #messageForm {
-      position:fixed; bottom:10px; left:50%; transform:translateX(-50%);
+      position:fixed;
+      bottom:10px;
+      left:50%;
+      transform:translateX(-50%);
       background:rgba(255,255,255,0.95);
-      padding:8px 12px; border-radius:12px;
-      display:flex; align-items:center; gap:8px; width:90%;
-      max-width:900px; justify-content:space-between;
-      z-index:1000; display:none;
+      padding:8px 12px;
+      border-radius:12px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      width:90%;
+      max-width:900px;
+      justify-content:space-between;
+      z-index:1000;
+      display:none;
     }
 
-    /* 輸入框樣式 */
+    /* 左側 input + 圖片區 */
+    #input-container {
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex:1;
+    }
+
     #messageInput {
+      flex:1;
       width:250px;
       height:40px;
       border-radius:5px;
@@ -79,26 +92,34 @@
       padding:5px 10px;
       outline:none;
     }
-
-    #messageInput::placeholder { color:#666; opacity:0.8; }
-    #messageInput:focus { border:2px solid #ffca1f; }
-
-    /* 相機按鈕 */
-    #cameraButton {
-      width:40px;
-      height:40px;
-      border-radius:50%;
-      border:none;
-      background:#f0f0f0;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      cursor:pointer;
-      padding:0;
+    #messageInput::placeholder {
+      color:#888;
+      opacity:0.8;
     }
-    #cameraButton img { width:22px; height:22px; }
+    #messageInput:focus {
+      border:2px solid #ff69b4;
+    }
 
-    /* send button */
+    #imageInput { display:none; }
+    #imageLabel {
+      font-size:22px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    #imageLabel img {
+      height:30px; width:auto;
+    }
+
+    #imagePreview {
+      height:40px; /* 保持跟輸入框同高度 */
+      width:auto;
+      border-radius:4px;
+      display:none;
+    }
+
+    /* Send button */
     #sendButton {
       background: #fbca1f;
       font-family: inherit;
@@ -109,6 +130,7 @@
       border-radius: 0.4em;
       box-shadow: 0.1em 0.1em;
       cursor: pointer;
+      flex-shrink:0;
     }
     #sendButton:hover {
       transform: translate(-0.05em, -0.05em);
@@ -118,9 +140,6 @@
       transform: translate(0.05em, 0.05em);
       box-shadow: 0.05em 0.05em;
     }
-
-    #imageInput { display:none; }
-    #imagePreview { height:90px; width:auto; border-radius:4px; display:none; }
   </style>
 </head>
 
@@ -142,16 +161,15 @@
 
 <!-- 留言 -->
 <div id="messageForm">
-  <input type="text" id="messageInput" placeholder="Share your journey" />
-  
-  <!-- 相機按鈕 -->
-  <label for="imageInput" id="cameraButton">
-    <img src="camera-fill-svgrepo-com.svg" alt="相機">
-  </label>
-  <input type="file" id="imageInput" accept="image/*" />
-
-  <img id="imagePreview" />
-  <button id="sendButton">SEND</button>
+  <div id="input-container">
+    <input type="text" id="messageInput" placeholder="輸入文字..." />
+    <label for="imageInput" id="imageLabel">
+      <img src="camera-fill-svgrepo-com.svg" alt="camera">
+    </label>
+    <input type="file" id="imageInput" accept="image/*" />
+    <img id="imagePreview" />
+  </div>
+  <button id="sendButton">發送</button>
 </div>
 
 <script>
@@ -187,23 +205,16 @@ function showBarrage(msg, index){
     el.appendChild(textNode);
   }
 
-  // 心心 SVG
+  // 粉紅心心 SVG
   const likeSpan = document.createElement("span");
   likeSpan.className = "like-count";
-  const heartIcon = document.createElement("img");
-  heartIcon.src = "heart-straight-fill-svgrepo-com.svg";
-  likeSpan.appendChild(heartIcon);
-
-  const likeNumber = document.createElement("span");
-  likeNumber.textContent = msg.likes || 0;
-  likeSpan.appendChild(likeNumber);
-
+  likeSpan.innerHTML = `<img src="heart-straight-fill-svgrepo-com.svg" alt="heart"> ${msg.likes || 0}`;
   el.appendChild(likeSpan);
 
   // Double Click = +1 like
   el.addEventListener("dblclick", ()=>{
     checkpoint0.messages[index].likes = (checkpoint0.messages[index].likes || 0) + 1;
-    likeNumber.textContent = checkpoint0.messages[index].likes;
+    likeSpan.innerHTML = `<img src="heart-straight-fill-svgrepo-com.svg" alt="heart"> ${checkpoint0.messages[index].likes}`;
     localStorage.setItem("barrage_checkpoint-0", JSON.stringify(checkpoint0.messages));
   });
 
@@ -211,7 +222,7 @@ function showBarrage(msg, index){
   setTimeout(()=>el.remove(), 9000);
 }
 
-/* ---------------- Start Barrage ---------------- */
+/* ---------------- Start/Stop Barrage ---------------- */
 function startBarrage(){
   if(checkpoint0.interval) return;
   container.style.display = "block";
@@ -277,6 +288,7 @@ sendBtn.addEventListener("click", ()=>{
     localStorage.setItem("barrage_checkpoint-0", JSON.stringify(checkpoint0.messages));
     showBarrage(msg, checkpoint0.messages.length - 1);
 
+    // 完全清除圖片及文字輸入
     input.value = "";
     imageInput.value = "";
     preview.src = "";
